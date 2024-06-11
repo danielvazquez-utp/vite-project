@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import Componente1 from './Componente1';
+import LineChart from '../echarts/LineChart';
 
 const AirQualityScreen = () => {
 
@@ -27,6 +28,8 @@ const AirQualityScreen = () => {
     const [humedad, setHumedad] = useState(0);
     const [presion, setPresion] = useState(0);
     const [descripcion, setDescripcion] = useState('');
+    const [temps, setTemps] = useState([]);
+    const [dates, setDates] = useState([]);
 
     const token='dc70001fc567310aca4f8f2dd2ec4ddaf33a677f';
     const apiKey='b90add97e8658958811faddd000ec8b5';
@@ -41,7 +44,24 @@ const AirQualityScreen = () => {
         setHumedad(data.main.humidity);
         setPresion(data.main.pressure);
         setDescripcion(data.weather[0].description);
-        
+    }
+
+    const getWeatherForecast = async(lat, lon) => {
+        const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${ lat }&lon=${ lon }&appid=${ apiKey }&units=metric&lang=es`;
+        const response = await fetch(url);
+        const data = await response.json();
+        console.log("Predicción del clima en los siguientes 5 días: ", data);
+        const lista = data.list;
+        let temperaturas = []
+        let fechas = []
+        lista.forEach(objeto => {
+            temperaturas.push(objeto.main.temp)
+            fechas.push(objeto.dt_txt)
+        });
+        console.log(temperaturas)
+        console.log(fechas)
+        setTemps(temperaturas)
+        setDates(fechas)
     }
 
     const getAQI = async(ciudad) => {
@@ -106,6 +126,7 @@ const AirQualityScreen = () => {
     useEffect(() => {
       getAQI(city);
       getWeather(latitud, longitud);
+      getWeatherForecast(latitud, longitud);
     }, [])
     
 
@@ -163,6 +184,14 @@ const AirQualityScreen = () => {
                     </div>
                     <div className='col-lg-4 col-md-6 col-xs-12'>
                         <Componente1 valor={ 5.7 } texto="O" icono="far fa-surprise" color="bg-orange" />
+                    </div>
+                    <div className='col-lg-4 col-md-6 col-xs-12'>
+                        <Componente1 />
+                    </div>
+                </div>
+                <div className='row'>
+                    <div className='col-12'>
+                        <LineChart temperaturas={ temps } fechas={ dates } titulo={"Predicción del clima los próximos 5 días"} />
                     </div>
                 </div>
             </div>
